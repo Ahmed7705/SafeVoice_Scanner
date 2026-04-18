@@ -25,6 +25,8 @@ const TRANSLATIONS = {
     loadingVoice: "Analyzing the link, please wait.",
     voiceSafe: "The link is safe. You can proceed.",
     voiceDangerous: "Warning! The link is dangerous. Do not open it.",
+    voiceQrSafe: "The QR code is safe. You can proceed.",
+    voiceQrDangerous: "Warning! The QR code is dangerous. Do not open it.",
     errorNoUrl: "Please enter a URL to check.",
     errorGeneral: "An error occurred. Please try again.",
     heuristicLabel: "Heuristic",
@@ -56,6 +58,8 @@ const TRANSLATIONS = {
     loadingVoice: "جاري تحليل الرابط، يرجى الانتظار.",
     voiceSafe: "الرابط آمن. يمكنك المتابعة.",
     voiceDangerous: "تحذير! الرابط خطير. لا تفتحه.",
+    voiceQrSafe: "رمز QR آمن. يمكنك المتابعة.",
+    voiceQrDangerous: "تحذير! رمز QR خطير. لا تفتحه.",
     errorNoUrl: "يرجى إدخال رابط للفحص.",
     errorGeneral: "حدث خطأ. يرجى المحاولة مرة أخرى.",
     heuristicLabel: "تحليل",
@@ -142,32 +146,89 @@ function toggleLanguage() {
   currentLang = currentLang === "en" ? "ar" : "en";
   localStorage.setItem("sv_lang", currentLang);
   applyLanguage();
-  loadHistory();
+  renderLocalHistory();
 }
 
 // ==============================================================================
-// Speech
+// Speech (Server-side Google TTS for reliable Arabic + English support)
 // ==============================================================================
+
+let currentAudio = null;       // Track currently playing audio
+let currentTtsAbort = null;    // AbortController for pending TTS fetch
+
+/**
+ * Speak text using server-side Google Text-to-Speech.
+ * Cancels any previous speech (both pending fetch and playing audio).
+ * @param {string} text - Text to speak
+ * @param {string} lang - Language code ('en' or 'ar')
+ */
 function speak(text, lang) {
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = lang === "ar" ? "ar-SA" : "en-US";
-  u.rate = 0.95;
-  u.pitch = 1;
-  u.volume = 1;
-  const voices = window.speechSynthesis.getVoices();
-  const target = lang === "ar" ? "ar" : "en";
-  const v = voices.find(v => v.lang.startsWith(target));
-  if (v) u.voice = v;
-  window.speechSynthesis.speak(u);
+  // Cancel any pending TTS fetch request
+  if (currentTtsAbort) {
+    currentTtsAbort.abort();
+    currentTtsAbort = null;
+  }
+
+  // Stop any currently playing audio
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+
+  // Create new AbortController for this request
+  const controller = new AbortController();
+  currentTtsAbort = controller;
+
+  fetch("/api/tts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: text, lang: lang }),
+    signal: controller.signal
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("TTS request failed");
+    return res.blob();
+  })
+  .then(blob => {
+    // Check if this request was cancelled while waiting
+    if (controller.signal.aborted) return;
+
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+    currentAudio.play().catch(err => {
+      console.warn("Audio autoplay blocked:", err);
+    });
+    currentAudio.onended = () => {
+      URL.revokeObjectURL(url);
+      currentAudio = null;
+    };
+    currentTtsAbort = null;
+  })
+  .catch(err => {
+    if (err.name !== "AbortError") {
+      console.error("TTS error:", err);
+    }
+  });
+}
+
+/**
+ * Stop any currently playing speech audio and cancel pending requests.
+ */
+function stopSpeech() {
+  if (currentTtsAbort) {
+    currentTtsAbort.abort();
+    currentTtsAbort = null;
+  }
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
 }
 
 function welcomeMessage() {
-  setTimeout(() => speak(t("welcomeVoice"), currentLang), 800);
-}
-
-if (window.speechSynthesis) {
-  window.speechSynthesis.onvoiceschanged = () => {};
+  setTimeout(() => speak(t("welcomeVoice"), currentLang), 1000);
 }
 
 // ==============================================================================
@@ -189,8 +250,30 @@ function closeQrPanel() {
   if (panel) panel.classList.remove("visible");
 }
 
-function startQrScanner() {
+async function startQrScanner() {
   if (isScanning || !window.Html5Qrcode) return;
+
+  // First, explicitly request camera permission
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    // Permission granted — stop the test stream, let html5-qrcode handle it
+    stream.getTracks().forEach(track => track.stop());
+  } catch (err) {
+    console.error("Camera permission error:", err);
+    // Show error message to user
+    const area = $(".qr-scanner-area");
+    if (area) {
+      area.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:250px;color:#fff;padding:20px;text-align:center;">
+        <i class="ph-bold ph-camera-slash" style="font-size:48px;margin-bottom:16px;opacity:.6"></i>
+        <div style="font-size:1rem;font-weight:600;margin-bottom:8px;">${currentLang === "ar" ? "لا يمكن الوصول للكاميرا" : "Camera Access Denied"}</div>
+        <div style="font-size:.85rem;opacity:.7;">${currentLang === "ar" ? "يرجى السماح بالوصول للكاميرا من إعدادات المتصفح" : "Please allow camera access in your browser settings"}</div>
+      </div>`;
+    }
+    speak(currentLang === "ar" ? "لا يمكن الوصول للكاميرا. يرجى السماح بالوصول من إعدادات المتصفح" : "Camera access denied. Please allow camera access in your browser settings.", currentLang);
+    return;
+  }
+
+  // Camera permission granted — start scanning
   qrScanner = new Html5Qrcode("qr-reader");
   isScanning = true;
   qrScanner.start(
@@ -198,22 +281,28 @@ function startQrScanner() {
     { fps: 10, qrbox: { width: 250, height: 250 } },
     (text) => { closeQrPanel(); checkUrl(text, "qr"); },
     () => {}
-  ).catch(() => { isScanning = false; });
+  ).catch((err) => {
+    console.error("QR scanner start error:", err);
+    isScanning = false;
+  });
 }
 
 function stopQrScanner() {
   if (qrScanner && isScanning) {
     qrScanner.stop().then(() => { isScanning = false; qrScanner = null; }).catch(() => { isScanning = false; qrScanner = null; });
   }
+  // Reset the scanner area HTML for next use
+  const reader = $("#qr-reader");
+  if (reader) reader.innerHTML = "";
 }
 
 // ==============================================================================
 // URL Checking
 // ==============================================================================
 async function checkUrl(url, scanType = "url") {
-  if (!url || !url.trim()) { speak(t("errorNoUrl"), currentLang); return; }
+  if (!url || !url.trim()) { speak(t("errorNoUrl"), currentLang, TRANSLATIONS.en.errorNoUrl); return; }
   showLoading(true);
-  speak(t("loadingVoice"), currentLang);
+  speak(t("loadingVoice"), currentLang, TRANSLATIONS.en.loadingVoice);
   try {
     const res = await fetch("/api/check-url", {
       method: "POST",
@@ -222,13 +311,15 @@ async function checkUrl(url, scanType = "url") {
     });
     const data = await res.json();
     showLoading(false);
-    if (data.error) { speak(t("errorGeneral"), currentLang); return; }
+    if (data.error) { speak(t("errorGeneral"), currentLang, TRANSLATIONS.en.errorGeneral); return; }
     showResult(data);
-    loadHistory();
+    // Save to local history (per-device, private)
+    saveToLocalHistory(data);
+    renderLocalHistory();
   } catch (err) {
     console.error("Check URL error:", err);
     showLoading(false);
-    speak(t("errorGeneral"), currentLang);
+    speak(t("errorGeneral"), currentLang, TRANSLATIONS.en.errorGeneral);
   }
 }
 
@@ -294,8 +385,15 @@ function showResult(data) {
 
   overlay.classList.add("visible");
 
-  // Speak
-  speak(isSafe ? t("voiceSafe") : t("voiceDangerous"), currentLang);
+  // Speak result - use QR-specific message if scan_type is 'qr'
+  const isQr = data.scan_type === "qr";
+  let voiceKey;
+  if (isQr) {
+    voiceKey = isSafe ? "voiceQrSafe" : "voiceQrDangerous";
+  } else {
+    voiceKey = isSafe ? "voiceSafe" : "voiceDangerous";
+  }
+  speak(t(voiceKey), currentLang);
 
   // Auto dismiss after 5 seconds
   resultTimer = setTimeout(() => {
@@ -307,26 +405,43 @@ function dismissResult() {
   const overlay = $("#result-overlay");
   if (overlay) overlay.classList.remove("visible");
   if (resultTimer) { clearTimeout(resultTimer); resultTimer = null; }
-  window.speechSynthesis.cancel();
+  stopSpeech();
   // Clear URL input for next scan
   const input = $("#url-input");
   if (input) { input.value = ""; input.focus(); }
 }
 
 // ==============================================================================
-// History
+// History (stored in localStorage — private per device)
 // ==============================================================================
-async function loadHistory() {
+const HISTORY_KEY = "sv_scan_history";
+const MAX_HISTORY = 50;
+
+function getLocalHistory() {
   try {
-    const res = await fetch("/api/history");
-    const data = await res.json();
-    renderHistory(data.history || []);
-  } catch (err) { console.error("Load history error:", err); }
+    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  } catch { return []; }
 }
 
-function renderHistory(history) {
+function saveToLocalHistory(data) {
+  const history = getLocalHistory();
+  history.unshift({
+    url: data.url,
+    result: data.result,
+    scan_type: data.scan_type,
+    heuristic_score: data.heuristic_score,
+    api_result: data.api_result,
+    timestamp: new Date().toISOString()
+  });
+  // Keep only last MAX_HISTORY items
+  if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+function renderLocalHistory() {
   const list = $("#history-list");
   if (!list) return;
+  const history = getLocalHistory();
   if (!history.length) {
     list.innerHTML = `<div class="history-empty"><div class="history-empty-icon"><i class="ph-bold ph-magnifying-glass"></i></div><div>${t("historyEmpty")}</div></div>`;
     return;
@@ -341,8 +456,9 @@ function renderHistory(history) {
   }).join("");
 }
 
-async function clearScanHistory() {
-  try { await fetch("/api/history", { method: "DELETE" }); loadHistory(); } catch (e) { console.error(e); }
+function clearScanHistory() {
+  localStorage.removeItem(HISTORY_KEY);
+  renderLocalHistory();
 }
 
 function formatTime(iso) {
@@ -370,7 +486,7 @@ document.addEventListener("keydown", (e) => {
 document.addEventListener("DOMContentLoaded", () => {
   applyTheme(currentTheme);
   applyLanguage();
-  loadHistory();
+  renderLocalHistory();
   welcomeMessage();
 
   // Focus URL input immediately

@@ -5,10 +5,12 @@ Combines local heuristic analysis with Google Safe Browsing API verification.
 """
 
 import re
+import io
 import requests
 from urllib.parse import urlparse
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 from flask_cors import CORS
+from gtts import gTTS
 from database import init_db, log_scan, get_history, clear_history
 
 # ==============================================================================
@@ -80,9 +82,9 @@ def analyze_heuristics(url):
         score += 25
         flags.append("ip_instead_of_domain")
 
-    # --- Check 2: Missing HTTPS ---
+    # --- Check 2: Missing HTTPS (automatically flags as dangerous) ---
     if parsed.scheme != "https":
-        score += 15
+        score += 50
         flags.append("no_https")
 
     # --- Check 3: Suspicious URL length (> 75 characters) ---
@@ -291,13 +293,40 @@ def delete_history():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/tts", methods=["POST"])
+def text_to_speech():
+    """
+    Generate speech audio from text using Google Text-to-Speech.
+    Accepts JSON with 'text' and 'lang' ('en' or 'ar').
+    Returns MP3 audio file.
+    """
+    data = request.get_json()
+    if not data or not data.get("text"):
+        return jsonify({"error": "No text provided"}), 400
+
+    text = data["text"]
+    lang = data.get("lang", "en")
+    tts_lang = "ar" if lang == "ar" else "en"
+
+    try:
+        tts = gTTS(text=text, lang=tts_lang, slow=False)
+        audio_buffer = io.BytesIO()
+        tts.write_to_fp(audio_buffer)
+        audio_buffer.seek(0)
+        return send_file(audio_buffer, mimetype="audio/mpeg")
+    except Exception as e:
+        print(f"[WARNING] TTS generation failed: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 # ==============================================================================
 # Application Entry Point
 # ==============================================================================
 
+# Initialize database on module load (works for both local and WSGI deployment)
+init_db()
+
 if __name__ == "__main__":
-    # Initialize the database on startup
-    init_db()
     print("=" * 60)
     print("  SafeVoice Scanner - Server Starting")
     print("  Access the application at: http://localhost:5000")
