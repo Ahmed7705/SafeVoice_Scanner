@@ -5,105 +5,88 @@
  */
 
 // ==============================================================================
-// Translations (English & Arabic)
+// Translations
 // ==============================================================================
 const TRANSLATIONS = {
   en: {
-    welcomeVoice: "Welcome to SafeVoice Scanner. Your secure link and QR code checker. Please choose: press 1 to check a URL, or press 2 to scan a QR code.",
+    welcomeVoice: "Welcome to SafeVoice Scanner. Your secure link and QR code checker. Please type or paste a URL to check, or press the QR button to scan a code.",
     heroTitle: 'SafeVoice <span class="gradient-text">Scanner</span>',
     heroSubtitle: "Secure link & QR code checker for everyone",
-    checkUrlLabel: "Check URL",
-    checkUrlDesc: "Paste or type a link",
     scanQrLabel: "Scan QR Code",
-    scanQrDesc: "Use your camera",
     urlPlaceholder: "Paste or type a URL here...",
     scanButton: "Scan",
-    stopCamera: "Stop Camera",
-    historyTitle: "📋 Scan History",
+    historyTitle: "Scan History",
     clearHistory: "Clear",
-    historyEmpty: "No scans yet. Start by checking a URL or scanning a QR code.",
-    historyEmptyIcon: "🔍",
-    resultSafe: "The link is safe",
-    resultDangerous: "Warning! The link is dangerous",
+    historyEmpty: "No scans yet. Check a URL or scan a QR code to get started.",
     resultSafeTitle: "Safe",
     resultDangerousTitle: "Dangerous",
-    resultDismiss: "Tap anywhere to dismiss",
+    resultDismiss: "Auto-closing in a few seconds...",
     loadingText: "Analyzing link...",
-    loadingVoice: "Analyzing the link. Please wait.",
+    loadingVoice: "Analyzing the link, please wait.",
     voiceSafe: "The link is safe. You can proceed.",
     voiceDangerous: "Warning! The link is dangerous. Do not open it.",
     errorNoUrl: "Please enter a URL to check.",
     errorGeneral: "An error occurred. Please try again.",
-    heuristicLabel: "Heuristic Score",
-    apiLabel: "API Result",
-    typeUrl: "URL",
-    typeQr: "QR",
-    langLabel: "AR",
+    heuristicLabel: "Heuristic",
+    apiLabel: "API",
     safe: "Safe",
     dangerous: "Dangerous",
-    ago: "ago",
     justNow: "Just now",
     minutesAgo: "min ago",
     hoursAgo: "hr ago",
     daysAgo: "d ago",
+    langLabel: "AR",
+    typeUrl: "URL",
+    typeQr: "QR",
   },
   ar: {
-    welcomeVoice: "مرحباً بك في سيف فويس سكانر. فاحص الروابط ورموز QR الآمن. اختر: اضغط 1 لفحص رابط، أو اضغط 2 لمسح رمز QR.",
+    welcomeVoice: "مرحباً بك في سيف فويس سكانر. فاحص الروابط ورموز QR الآمن. الصق أو اكتب رابط للفحص، أو اضغط زر QR لمسح رمز.",
     heroTitle: 'سيف فويس <span class="gradient-text">سكانر</span>',
     heroSubtitle: "فاحص الروابط ورموز QR الآمن للجميع",
-    checkUrlLabel: "فحص رابط",
-    checkUrlDesc: "الصق أو اكتب رابط",
     scanQrLabel: "مسح رمز QR",
-    scanQrDesc: "استخدم الكاميرا",
     urlPlaceholder: "الصق أو اكتب الرابط هنا...",
     scanButton: "فحص",
-    stopCamera: "إيقاف الكاميرا",
-    historyTitle: "📋 سجل الفحص",
+    historyTitle: "سجل الفحص",
     clearHistory: "مسح",
-    historyEmpty: "لا توجد عمليات فحص بعد. ابدأ بفحص رابط أو مسح رمز QR.",
-    historyEmptyIcon: "🔍",
-    resultSafe: "الرابط آمن",
-    resultDangerous: "تحذير! الرابط خطير",
+    historyEmpty: "لا توجد عمليات فحص بعد. افحص رابط أو امسح رمز QR للبدء.",
     resultSafeTitle: "آمن",
     resultDangerousTitle: "خطير",
-    resultDismiss: "اضغط في أي مكان للإغلاق",
+    resultDismiss: "سيتم الإغلاق تلقائياً...",
     loadingText: "جاري تحليل الرابط...",
-    loadingVoice: "جاري تحليل الرابط. يرجى الانتظار.",
+    loadingVoice: "جاري تحليل الرابط، يرجى الانتظار.",
     voiceSafe: "الرابط آمن. يمكنك المتابعة.",
     voiceDangerous: "تحذير! الرابط خطير. لا تفتحه.",
     errorNoUrl: "يرجى إدخال رابط للفحص.",
     errorGeneral: "حدث خطأ. يرجى المحاولة مرة أخرى.",
-    heuristicLabel: "درجة التحليل",
-    apiLabel: "نتيجة API",
-    typeUrl: "رابط",
-    typeQr: "QR",
-    langLabel: "EN",
+    heuristicLabel: "تحليل",
+    apiLabel: "API",
     safe: "آمن",
     dangerous: "خطير",
-    ago: "مضت",
     justNow: "الآن",
     minutesAgo: "دقيقة",
     hoursAgo: "ساعة",
     daysAgo: "يوم",
+    langLabel: "EN",
+    typeUrl: "رابط",
+    typeQr: "QR",
   }
 };
 
 // ==============================================================================
-// Application State
+// State
 // ==============================================================================
 let currentLang = localStorage.getItem("sv_lang") || "en";
 let currentTheme = localStorage.getItem("sv_theme") || "system";
 let qrScanner = null;
 let isScanning = false;
+let resultTimer = null;
+
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+function t(k) { return TRANSLATIONS[currentLang][k] || k; }
 
 // ==============================================================================
-// DOM References
-// ==============================================================================
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
-
-// ==============================================================================
-// Theme Management
+// Theme
 // ==============================================================================
 function getSystemTheme() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -112,43 +95,37 @@ function getSystemTheme() {
 function applyTheme(theme) {
   const resolved = theme === "system" ? getSystemTheme() : theme;
   document.documentElement.setAttribute("data-theme", resolved);
-  const btn = $("#theme-toggle");
-  if (btn) btn.textContent = resolved === "dark" ? "☀️" : "🌙";
+  const icon = $("#theme-icon");
+  if (icon) {
+    icon.className = resolved === "dark"
+      ? "ph-bold ph-sun"
+      : "ph-bold ph-moon";
+  }
 }
 
 function toggleTheme() {
-  // Cycle: system -> light -> dark -> system
   if (currentTheme === "system") {
     currentTheme = getSystemTheme() === "dark" ? "light" : "dark";
-  } else if (currentTheme === "light") {
-    currentTheme = "dark";
   } else {
-    currentTheme = "light";
+    currentTheme = currentTheme === "light" ? "dark" : "light";
   }
   localStorage.setItem("sv_theme", currentTheme);
   applyTheme(currentTheme);
 }
 
-// Listen for system theme changes
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
   if (currentTheme === "system") applyTheme("system");
 });
 
 // ==============================================================================
-// Language Management
+// Language
 // ==============================================================================
-function t(key) {
-  return TRANSLATIONS[currentLang][key] || key;
-}
-
 function applyLanguage() {
   const isAr = currentLang === "ar";
   document.documentElement.setAttribute("dir", isAr ? "rtl" : "ltr");
   document.documentElement.setAttribute("lang", currentLang);
 
-  // Update all translatable elements
-  const els = $$("[data-i18n]");
-  els.forEach(el => {
+  $$("[data-i18n]").forEach(el => {
     const key = el.getAttribute("data-i18n");
     if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
       el.placeholder = t(key);
@@ -157,7 +134,6 @@ function applyLanguage() {
     }
   });
 
-  // Update language button text
   const langBtn = $("#lang-toggle");
   if (langBtn) langBtn.textContent = t("langLabel");
 }
@@ -170,68 +146,64 @@ function toggleLanguage() {
 }
 
 // ==============================================================================
-// Speech Engine (Web Speech API)
+// Speech
 // ==============================================================================
 function speak(text, lang) {
-  // Cancel any ongoing speech
   window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = lang === "ar" ? "ar-SA" : "en-US";
-  utterance.rate = 0.95;
-  utterance.pitch = 1;
-  utterance.volume = 1;
-
-  // Try to find a matching voice
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang === "ar" ? "ar-SA" : "en-US";
+  u.rate = 0.95;
+  u.pitch = 1;
+  u.volume = 1;
   const voices = window.speechSynthesis.getVoices();
-  const targetLang = lang === "ar" ? "ar" : "en";
-  const matchedVoice = voices.find(v => v.lang.startsWith(targetLang));
-  if (matchedVoice) utterance.voice = matchedVoice;
-
-  window.speechSynthesis.speak(utterance);
+  const target = lang === "ar" ? "ar" : "en";
+  const v = voices.find(v => v.lang.startsWith(target));
+  if (v) u.voice = v;
+  window.speechSynthesis.speak(u);
 }
 
 function welcomeMessage() {
-  // Small delay to ensure voices are loaded
-  setTimeout(() => {
-    speak(t("welcomeVoice"), currentLang);
-  }, 800);
+  setTimeout(() => speak(t("welcomeVoice"), currentLang), 800);
 }
 
-// Ensure voices are loaded
 if (window.speechSynthesis) {
   window.speechSynthesis.onvoiceschanged = () => {};
 }
 
 // ==============================================================================
-// Panel Management
+// QR Scanner
 // ==============================================================================
-function showPanel(panelId) {
-  // Hide all panels
-  $$(".panel").forEach(p => p.classList.remove("visible"));
-
-  // Deactivate all action cards
-  $$(".action-card").forEach(c => c.classList.remove("active"));
-
-  // Show the selected panel
-  const panel = $(`#${panelId}`);
-  if (panel) panel.classList.add("visible");
-
-  // Activate the corresponding card
-  const cardId = panelId === "url-panel" ? "card-url" : "card-qr";
-  const card = $(`#${cardId}`);
-  if (card) card.classList.add("active");
-
-  // If QR panel, start scanner
-  if (panelId === "qr-panel") {
-    startQrScanner();
+function toggleQrPanel() {
+  const panel = $("#qr-panel");
+  if (panel.classList.contains("visible")) {
+    closeQrPanel();
   } else {
-    stopQrScanner();
-    // Focus on URL input
-    setTimeout(() => {
-      const input = $("#url-input");
-      if (input) input.focus();
-    }, 100);
+    panel.classList.add("visible");
+    startQrScanner();
+  }
+}
+
+function closeQrPanel() {
+  stopQrScanner();
+  const panel = $("#qr-panel");
+  if (panel) panel.classList.remove("visible");
+}
+
+function startQrScanner() {
+  if (isScanning || !window.Html5Qrcode) return;
+  qrScanner = new Html5Qrcode("qr-reader");
+  isScanning = true;
+  qrScanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    (text) => { closeQrPanel(); checkUrl(text, "qr"); },
+    () => {}
+  ).catch(() => { isScanning = false; });
+}
+
+function stopQrScanner() {
+  if (qrScanner && isScanning) {
+    qrScanner.stop().then(() => { isScanning = false; qrScanner = null; }).catch(() => { isScanning = false; qrScanner = null; });
   }
 }
 
@@ -239,34 +211,19 @@ function showPanel(panelId) {
 // URL Checking
 // ==============================================================================
 async function checkUrl(url, scanType = "url") {
-  if (!url || !url.trim()) {
-    speak(t("errorNoUrl"), currentLang);
-    return;
-  }
-
-  // Show loading
+  if (!url || !url.trim()) { speak(t("errorNoUrl"), currentLang); return; }
   showLoading(true);
   speak(t("loadingVoice"), currentLang);
-
   try {
-    const response = await fetch("/api/check-url", {
+    const res = await fetch("/api/check-url", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url: url.trim(), scan_type: scanType })
     });
-
-    const data = await response.json();
+    const data = await res.json();
     showLoading(false);
-
-    if (data.error) {
-      speak(t("errorGeneral"), currentLang);
-      return;
-    }
-
-    // Show result
+    if (data.error) { speak(t("errorGeneral"), currentLang); return; }
     showResult(data);
-
-    // Refresh history
     loadHistory();
   } catch (err) {
     console.error("Check URL error:", err);
@@ -277,248 +234,154 @@ async function checkUrl(url, scanType = "url") {
 
 function handleUrlSubmit() {
   const input = $("#url-input");
-  if (input) {
-    checkUrl(input.value, "url");
-  }
+  if (input) checkUrl(input.value, "url");
 }
 
 // ==============================================================================
-// QR Code Scanner
-// ==============================================================================
-function startQrScanner() {
-  if (isScanning || !window.Html5Qrcode) return;
-
-  const reader = $("#qr-reader");
-  if (!reader) return;
-
-  qrScanner = new Html5Qrcode("qr-reader");
-  isScanning = true;
-
-  qrScanner.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: { width: 250, height: 250 } },
-    (decodedText) => {
-      // QR code successfully scanned
-      stopQrScanner();
-      checkUrl(decodedText, "qr");
-    },
-    (errorMessage) => {
-      // QR scan error (e.g., no QR in frame) - silently ignore
-    }
-  ).catch(err => {
-    console.error("QR Scanner start error:", err);
-    isScanning = false;
-  });
-}
-
-function stopQrScanner() {
-  if (qrScanner && isScanning) {
-    qrScanner.stop().then(() => {
-      isScanning = false;
-      qrScanner = null;
-    }).catch(() => {
-      isScanning = false;
-      qrScanner = null;
-    });
-  }
-}
-
-// ==============================================================================
-// Loading Overlay
+// Loading
 // ==============================================================================
 function showLoading(show) {
-  const overlay = $("#loading-overlay");
-  if (overlay) {
-    if (show) {
-      overlay.classList.add("visible");
-    } else {
-      overlay.classList.remove("visible");
-    }
-  }
+  const o = $("#loading-overlay");
+  if (o) o.classList.toggle("visible", show);
 }
 
 // ==============================================================================
-// Result Overlay
+// Result Overlay (auto-dismiss after 5s)
 // ==============================================================================
 function showResult(data) {
   const overlay = $("#result-overlay");
   if (!overlay) return;
 
-  const isSafe = data.result === "safe";
+  // Clear any existing timer
+  if (resultTimer) { clearTimeout(resultTimer); resultTimer = null; }
 
-  // Remove previous classes
+  const isSafe = data.result === "safe";
   overlay.classList.remove("safe", "dangerous");
   overlay.classList.add(isSafe ? "safe" : "dangerous");
 
-  // Update content
-  $("#result-icon").textContent = isSafe ? "✅" : "🚨";
+  // Icon
+  const iconEl = $("#result-icon");
+  iconEl.className = isSafe
+    ? "ph-bold ph-check-circle"
+    : "ph-bold ph-warning-circle";
+
   $("#result-title").textContent = isSafe ? t("resultSafeTitle") : t("resultDangerousTitle");
   $("#result-url").textContent = data.url;
 
-  // Build details badges
-  const detailsEl = $("#result-details");
-  detailsEl.innerHTML = "";
-
-  // Heuristic score badge
-  const hBadge = document.createElement("span");
-  hBadge.className = "result-badge";
-  hBadge.textContent = `${t("heuristicLabel")}: ${data.heuristic_score}/100`;
-  detailsEl.appendChild(hBadge);
-
-  // API result badge
-  const aBadge = document.createElement("span");
-  aBadge.className = "result-badge";
-  aBadge.textContent = `${t("apiLabel")}: ${data.api_result}`;
-  detailsEl.appendChild(aBadge);
-
-  // Threat type badges
-  if (data.threat_types && data.threat_types.length > 0) {
-    data.threat_types.forEach(tt => {
-      const badge = document.createElement("span");
-      badge.className = "result-badge";
-      badge.textContent = tt;
-      detailsEl.appendChild(badge);
-    });
+  // Details
+  const det = $("#result-details");
+  det.innerHTML = "";
+  const mkBadge = (icon, text) => {
+    const s = document.createElement("span");
+    s.className = "result-badge";
+    s.innerHTML = `<i class="ph-bold ${icon}"></i> ${text}`;
+    return s;
+  };
+  det.appendChild(mkBadge("ph-chart-bar", `${t("heuristicLabel")}: ${data.heuristic_score}/100`));
+  det.appendChild(mkBadge("ph-cloud-check", `${t("apiLabel")}: ${data.api_result}`));
+  if (data.threat_types?.length) {
+    data.threat_types.forEach(tt => det.appendChild(mkBadge("ph-warning", tt)));
   }
 
   $("#result-dismiss-text").textContent = t("resultDismiss");
 
-  // Show overlay
+  // Progress bar animation
+  const bar = $("#result-progress-bar");
+  bar.classList.remove("animate");
+  // Force reflow then start animation
+  void bar.offsetWidth;
+  bar.classList.add("animate");
+
   overlay.classList.add("visible");
 
-  // Speak result
-  if (isSafe) {
-    speak(t("voiceSafe"), currentLang);
-  } else {
-    speak(t("voiceDangerous"), currentLang);
-  }
+  // Speak
+  speak(isSafe ? t("voiceSafe") : t("voiceDangerous"), currentLang);
+
+  // Auto dismiss after 5 seconds
+  resultTimer = setTimeout(() => {
+    dismissResult();
+  }, 5000);
 }
 
 function dismissResult() {
   const overlay = $("#result-overlay");
   if (overlay) overlay.classList.remove("visible");
+  if (resultTimer) { clearTimeout(resultTimer); resultTimer = null; }
   window.speechSynthesis.cancel();
+  // Clear URL input for next scan
+  const input = $("#url-input");
+  if (input) { input.value = ""; input.focus(); }
 }
 
 // ==============================================================================
-// Scan History
+// History
 // ==============================================================================
 async function loadHistory() {
   try {
-    const response = await fetch("/api/history");
-    const data = await response.json();
+    const res = await fetch("/api/history");
+    const data = await res.json();
     renderHistory(data.history || []);
-  } catch (err) {
-    console.error("Load history error:", err);
-  }
+  } catch (err) { console.error("Load history error:", err); }
 }
 
 function renderHistory(history) {
   const list = $("#history-list");
   if (!list) return;
-
   if (!history.length) {
-    list.innerHTML = `
-      <div class="history-empty">
-        <div class="history-empty-icon">${t("historyEmptyIcon")}</div>
-        <div>${t("historyEmpty")}</div>
-      </div>
-    `;
+    list.innerHTML = `<div class="history-empty"><div class="history-empty-icon"><i class="ph-bold ph-magnifying-glass"></i></div><div>${t("historyEmpty")}</div></div>`;
     return;
   }
-
   list.innerHTML = history.map(item => {
-    const isSafe = item.result === "safe";
-    const resultText = isSafe ? t("safe") : t("dangerous");
-    const scanTypeText = item.scan_type === "qr" ? t("typeQr") : t("typeUrl");
-    const timeText = formatTime(item.timestamp);
-
-    return `
-      <div class="history-item" role="listitem" aria-label="${item.url} - ${resultText}">
-        <div class="history-dot ${item.result}"></div>
-        <div class="history-info">
-          <div class="history-url" title="${item.url}">${item.url}</div>
-          <div class="history-meta">${scanTypeText} • ${timeText}</div>
-        </div>
-        <span class="history-result ${item.result}">${resultText}</span>
-      </div>
-    `;
+    const safe = item.result === "safe";
+    const icon = safe ? "ph-check-circle" : "ph-warning-circle";
+    const resultText = safe ? t("safe") : t("dangerous");
+    const typeText = item.scan_type === "qr" ? t("typeQr") : t("typeUrl");
+    const time = formatTime(item.timestamp);
+    return `<div class="history-item" role="listitem"><div class="history-status-icon ${item.result}"><i class="ph-bold ${icon}"></i></div><div class="history-info"><div class="history-url" title="${item.url}">${item.url}</div><div class="history-meta"><i class="ph-bold ph-clock"></i> ${time} &middot; ${typeText}</div></div><span class="history-result ${item.result}">${resultText}</span></div>`;
   }).join("");
 }
 
 async function clearScanHistory() {
-  try {
-    await fetch("/api/history", { method: "DELETE" });
-    loadHistory();
-  } catch (err) {
-    console.error("Clear history error:", err);
-  }
+  try { await fetch("/api/history", { method: "DELETE" }); loadHistory(); } catch (e) { console.error(e); }
 }
 
-function formatTime(isoStr) {
-  if (!isoStr) return "";
-  const date = new Date(isoStr);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffHr = Math.floor(diffMs / 3600000);
-  const diffDay = Math.floor(diffMs / 86400000);
-
-  if (diffMin < 1) return t("justNow");
-  if (diffMin < 60) return `${diffMin} ${t("minutesAgo")}`;
-  if (diffHr < 24) return `${diffHr} ${t("hoursAgo")}`;
-  return `${diffDay} ${t("daysAgo")}`;
+function formatTime(iso) {
+  if (!iso) return "";
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return t("justNow");
+  if (m < 60) return `${m} ${t("minutesAgo")}`;
+  const h = Math.floor(diff / 3600000);
+  if (h < 24) return `${h} ${t("hoursAgo")}`;
+  return `${Math.floor(diff / 86400000)} ${t("daysAgo")}`;
 }
 
 // ==============================================================================
-// Keyboard Shortcuts (Accessibility)
+// Keyboard
 // ==============================================================================
 document.addEventListener("keydown", (e) => {
-  // 1 key = Check URL, 2 key = Scan QR
   if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-
-  if (e.key === "1") {
-    showPanel("url-panel");
-  } else if (e.key === "2") {
-    showPanel("qr-panel");
-  } else if (e.key === "Escape") {
-    dismissResult();
-    showLoading(false);
-  }
+  if (e.key === "Escape") { dismissResult(); showLoading(false); closeQrPanel(); }
 });
 
 // ==============================================================================
-// Initialization
+// Init
 // ==============================================================================
 document.addEventListener("DOMContentLoaded", () => {
-  // Apply theme
   applyTheme(currentTheme);
-
-  // Apply language
   applyLanguage();
-
-  // Load history
   loadHistory();
-
-  // Welcome voice (only on first visit or page load)
   welcomeMessage();
 
-  // Event Listeners
+  // Focus URL input immediately
+  setTimeout(() => { const i = $("#url-input"); if (i) i.focus(); }, 300);
+
   $("#theme-toggle")?.addEventListener("click", toggleTheme);
   $("#lang-toggle")?.addEventListener("click", toggleLanguage);
-  $("#card-url")?.addEventListener("click", () => showPanel("url-panel"));
-  $("#card-qr")?.addEventListener("click", () => showPanel("qr-panel"));
   $("#scan-btn")?.addEventListener("click", handleUrlSubmit);
-  $("#stop-qr-btn")?.addEventListener("click", () => {
-    stopQrScanner();
-    $$(".panel").forEach(p => p.classList.remove("visible"));
-    $$(".action-card").forEach(c => c.classList.remove("active"));
-  });
+  $("#qr-toggle-btn")?.addEventListener("click", toggleQrPanel);
+  $("#close-qr-btn")?.addEventListener("click", closeQrPanel);
   $("#result-overlay")?.addEventListener("click", dismissResult);
   $("#clear-history-btn")?.addEventListener("click", clearScanHistory);
-
-  // URL input enter key
-  $("#url-input")?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") handleUrlSubmit();
-  });
+  $("#url-input")?.addEventListener("keydown", (e) => { if (e.key === "Enter") handleUrlSubmit(); });
 });
