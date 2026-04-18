@@ -1,0 +1,812 @@
+/* ==============================================================================
+   SafeVoice Scanner - Premium Stylesheet
+   Accessible, voice-guided cybersecurity tool
+   ============================================================================== */
+
+/* --- Google Font --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ==============================================================================
+   CSS Custom Properties (Theme System)
+   ============================================================================== */
+:root {
+  /* Light Mode (Default) */
+  --bg-primary: #f0f2f5;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card-hover: rgba(255, 255, 255, 0.95);
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a6a;
+  --text-muted: #8888aa;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.12);
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --accent-color: #6366f1;
+  --accent-hover: #4f46e5;
+  --safe-color: #10b981;
+  --safe-bg: #ecfdf5;
+  --safe-gradient: linear-gradient(135deg, #10b981, #34d399);
+  --danger-color: #ef4444;
+  --danger-bg: #fef2f2;
+  --danger-gradient: linear-gradient(135deg, #ef4444, #f87171);
+  --input-bg: #f8f9fb;
+  --input-border: #e0e0e8;
+  --header-bg: rgba(255, 255, 255, 0.8);
+  --overlay-bg: rgba(0, 0, 0, 0.4);
+  --skeleton-bg: #e0e0e8;
+  --scrollbar-thumb: #c4c4d4;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0f0f1a;
+  --bg-secondary: #1a1a2e;
+  --bg-card: rgba(30, 30, 50, 0.85);
+  --bg-card-hover: rgba(40, 40, 65, 0.95);
+  --text-primary: #e8e8f0;
+  --text-secondary: #a0a0c0;
+  --text-muted: #6a6a8a;
+  --border-color: rgba(255, 255, 255, 0.06);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.4);
+  --glass-bg: rgba(30, 30, 50, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --input-bg: #16162a;
+  --input-border: #2a2a44;
+  --header-bg: rgba(15, 15, 26, 0.85);
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+  --skeleton-bg: #2a2a44;
+  --scrollbar-thumb: #3a3a5a;
+}
+
+/* ==============================================================================
+   Reset & Base
+   ============================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  transition: background 0.4s ease, color 0.4s ease;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* --- Animated Background Gradient --- */
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+              radial-gradient(circle at 70% 70%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+  z-index: -1;
+  animation: bgShift 20s ease-in-out infinite alternate;
+}
+
+@keyframes bgShift {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(-5%, -5%) rotate(3deg); }
+}
+
+/* ==============================================================================
+   Skip Link (Accessibility)
+   ============================================================================== */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  background: var(--accent-color);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 0 0 12px 12px;
+  z-index: 10000;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.3s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* ==============================================================================
+   Header / Navbar
+   ============================================================================== */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--header-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 24px;
+  transition: background 0.4s ease;
+}
+
+.header-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.3);
+}
+
+.logo-text {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.logo-text span {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- Toggle Buttons (Theme & Language) --- */
+.toggle-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.25s ease;
+}
+
+.toggle-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.toggle-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.lang-btn {
+  width: auto;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* ==============================================================================
+   Main Content Area
+   ============================================================================== */
+.app-main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+/* ==============================================================================
+   Welcome / Hero Section
+   ============================================================================== */
+.hero-section {
+  text-align: center;
+  margin-bottom: 36px;
+  animation: fadeUp 0.6s ease-out;
+}
+
+.hero-title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.hero-title .gradient-text {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 400;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ==============================================================================
+   Action Cards (Check URL / Scan QR)
+   ============================================================================== */
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 28px;
+  animation: fadeUp 0.6s ease-out 0.1s both;
+}
+
+.action-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent-gradient);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 20px;
+}
+
+.action-card:hover, .action-card:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent-color);
+}
+
+.action-card:hover::before {
+  opacity: 0.05;
+}
+
+.action-card.active {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2), var(--shadow-md);
+}
+
+.action-card:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.action-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.action-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  position: relative;
+  z-index: 1;
+}
+
+.action-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ==============================================================================
+   Panels (URL Input & QR Scanner)
+   ============================================================================== */
+.panel {
+  display: none;
+  animation: fadeUp 0.4s ease-out;
+}
+
+.panel.visible {
+  display: block;
+}
+
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+}
+
+/* --- URL Input --- */
+.url-input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.url-input {
+  flex: 1;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 2px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.25s ease;
+  outline: none;
+}
+
+.url-input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.url-input::placeholder {
+  color: var(--text-muted);
+}
+
+.scan-btn {
+  padding: 14px 28px;
+  border-radius: 14px;
+  border: none;
+  background: var(--accent-gradient);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.scan-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
+}
+
+.scan-btn:active {
+  transform: translateY(0);
+}
+
+.scan-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.scan-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* --- QR Scanner Area --- */
+.qr-scanner-area {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  min-height: 300px;
+  position: relative;
+}
+
+.qr-scanner-area video {
+  width: 100% !important;
+  border-radius: 16px;
+}
+
+#qr-reader {
+  width: 100%;
+  border: none !important;
+}
+
+#qr-reader video {
+  border-radius: 16px !important;
+}
+
+#qr-reader__scan_region {
+  min-height: 280px;
+}
+
+#qr-reader__dashboard {
+  padding: 12px !important;
+}
+
+#qr-reader__dashboard_section_csr button {
+  background: var(--accent-gradient) !important;
+  color: white !important;
+  border: none !important;
+  padding: 10px 20px !important;
+  border-radius: 10px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+}
+
+.qr-stop-btn {
+  display: block;
+  margin: 16px auto 0;
+  padding: 12px 28px;
+  border-radius: 12px;
+  border: 2px solid var(--danger-color);
+  background: transparent;
+  color: var(--danger-color);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.25s ease;
+}
+
+.qr-stop-btn:hover {
+  background: var(--danger-color);
+  color: #fff;
+}
+
+/* ==============================================================================
+   Loading Spinner
+   ============================================================================== */
+.loading-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.loading-overlay.visible {
+  display: flex;
+}
+
+.spinner {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-text {
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==============================================================================
+   Result Overlay
+   ============================================================================== */
+.result-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px;
+  cursor: pointer;
+  animation: resultFadeIn 0.4s ease-out;
+}
+
+.result-overlay.visible {
+  display: flex;
+}
+
+.result-overlay.safe {
+  background: var(--safe-gradient);
+}
+
+.result-overlay.dangerous {
+  background: var(--danger-gradient);
+}
+
+.result-icon {
+  font-size: 5rem;
+  animation: resultBounce 0.6s ease-out;
+}
+
+.result-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+}
+
+.result-url {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  word-break: break-all;
+  max-width: 500px;
+  background: rgba(0, 0, 0, 0.15);
+  padding: 10px 20px;
+  border-radius: 12px;
+}
+
+.result-details {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.result-badge {
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.result-dismiss {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+@keyframes resultFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes resultBounce {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* ==============================================================================
+   Scan History
+   ============================================================================== */
+.history-section {
+  animation: fadeUp 0.6s ease-out 0.2s both;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clear-btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.clear-btn:hover {
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  transition: all 0.25s ease;
+}
+
+.history-item:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-sm);
+}
+
+.history-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.history-dot.safe { background: var(--safe-color); }
+.history-dot.dangerous { background: var(--danger-color); }
+
+.history-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-url {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.history-result {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.history-result.safe {
+  color: var(--safe-color);
+  background: var(--safe-bg);
+}
+
+.history-result.dangerous {
+  color: var(--danger-color);
+  background: var(--danger-bg);
+}
+
+.history-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.history-empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+/* ==============================================================================
+   RTL Support (Arabic)
+   ============================================================================== */
+[dir="rtl"] .header-inner { flex-direction: row-reverse; }
+[dir="rtl"] .history-item:hover { transform: translateX(-4px); }
+[dir="rtl"] .url-input-group { flex-direction: row-reverse; }
+[dir="rtl"] .section-header { flex-direction: row-reverse; }
+[dir="rtl"] .logo-group { flex-direction: row-reverse; }
+
+/* ==============================================================================
+   Animations
+   ============================================================================== */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+/* ==============================================================================
+   Responsive Design
+   ============================================================================== */
+@media (max-width: 600px) {
+  .app-main { padding: 20px 14px 80px; }
+  .hero-title { font-size: 1.6rem; }
+  .hero-subtitle { font-size: 0.9rem; }
+  .action-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .action-card { padding: 20px 14px; }
+  .action-icon { font-size: 2rem; }
+  .url-input-group { flex-direction: column; }
+  [dir="rtl"] .url-input-group { flex-direction: column; }
+  .glass-card { padding: 20px; }
+  .result-title { font-size: 1.5rem; }
+  .result-icon { font-size: 4rem; }
+  .logo-text { font-size: 0.95rem; }
+}
+
+/* ==============================================================================
+   Scrollbar Styling
+   ============================================================================== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+/* ==============================================================================
+   Focus Visible Styles (Accessibility)
+   ============================================================================== */
+*:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* ==============================================================================
+   Print Styles
+   ============================================================================== */
+@media print {
+  .app-header, .action-grid, .qr-scanner-area, .result-overlay, .loading-overlay { display: none !important; }
+}

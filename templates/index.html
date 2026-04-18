@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SafeVoice Scanner - Accessible, voice-guided suspicious link and QR code checker for visually impaired users. Check URLs and scan QR codes safely." />
+  <meta name="theme-color" content="#6366f1" />
+  <title>SafeVoice Scanner - Secure Link & QR Code Checker</title>
+
+  <!-- Favicon (Inline SVG) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css" />
+
+  <!-- html5-qrcode Library (CDN) -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+
+<body>
+  <!-- Skip Link for Accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- ====================================================================
+       Header / Navigation Bar
+       ==================================================================== -->
+  <header class="app-header" role="banner">
+    <div class="header-inner">
+      <div class="logo-group">
+        <div class="logo-icon" aria-hidden="true">🛡️</div>
+        <div class="logo-text"><span>SafeVoice</span> Scanner</div>
+      </div>
+
+      <div class="header-controls">
+        <!-- Language Toggle -->
+        <button id="lang-toggle" class="toggle-btn lang-btn" aria-label="Toggle language" title="Toggle Language">
+          AR
+        </button>
+        <!-- Theme Toggle -->
+        <button id="theme-toggle" class="toggle-btn" aria-label="Toggle dark mode" title="Toggle Theme">
+          🌙
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       Main Content
+       ==================================================================== -->
+  <main id="main-content" class="app-main" role="main">
+
+    <!-- Hero / Welcome Section -->
+    <section class="hero-section" aria-label="Welcome">
+      <h1 class="hero-title" data-i18n="heroTitle">
+        SafeVoice <span class="gradient-text">Scanner</span>
+      </h1>
+      <p class="hero-subtitle" data-i18n="heroSubtitle">
+        Secure link &amp; QR code checker for everyone
+      </p>
+    </section>
+
+    <!-- Action Cards (Choose Mode) -->
+    <div class="action-grid" role="group" aria-label="Choose scan mode">
+      <!-- Check URL Card -->
+      <div id="card-url" class="action-card" role="button" tabindex="0" aria-label="Check URL - press to paste or type a link" aria-keyshortcuts="1">
+        <span class="action-icon" aria-hidden="true">🔗</span>
+        <div class="action-label" data-i18n="checkUrlLabel">Check URL</div>
+        <div class="action-desc" data-i18n="checkUrlDesc">Paste or type a link</div>
+      </div>
+
+      <!-- Scan QR Card -->
+      <div id="card-qr" class="action-card" role="button" tabindex="0" aria-label="Scan QR Code - press to open camera" aria-keyshortcuts="2">
+        <span class="action-icon" aria-hidden="true">📷</span>
+        <div class="action-label" data-i18n="scanQrLabel">Scan QR Code</div>
+        <div class="action-desc" data-i18n="scanQrDesc">Use your camera</div>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         URL Input Panel
+         ================================================================ -->
+    <section id="url-panel" class="panel" aria-label="URL checker">
+      <div class="glass-card">
+        <div class="url-input-group">
+          <input
+            type="url"
+            id="url-input"
+            class="url-input"
+            data-i18n="urlPlaceholder"
+            placeholder="Paste or type a URL here..."
+            aria-label="Enter URL to check"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+          />
+          <button id="scan-btn" class="scan-btn" aria-label="Scan URL" data-i18n="scanButton">
+            Scan
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         QR Scanner Panel
+         ================================================================ -->
+    <section id="qr-panel" class="panel" aria-label="QR code scanner">
+      <div class="glass-card">
+        <div class="qr-scanner-area">
+          <div id="qr-reader"></div>
+        </div>
+        <button id="stop-qr-btn" class="qr-stop-btn" data-i18n="stopCamera">
+          Stop Camera
+        </button>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         Scan History
+         ================================================================ -->
+    <section class="history-section" aria-label="Scan history">
+      <div class="section-header">
+        <h2 class="section-title" data-i18n="historyTitle">📋 Scan History</h2>
+        <button id="clear-history-btn" class="clear-btn" data-i18n="clearHistory" aria-label="Clear scan history">
+          Clear
+        </button>
+      </div>
+      <div id="history-list" class="history-list" role="list">
+        <!-- History items rendered by JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ====================================================================
+       Loading Overlay
+       ==================================================================== -->
+  <div id="loading-overlay" class="loading-overlay" role="alert" aria-live="assertive">
+    <div class="spinner" aria-hidden="true"></div>
+    <div class="loading-text" data-i18n="loadingText">Analyzing link...</div>
+  </div>
+
+  <!-- ====================================================================
+       Result Overlay
+       ==================================================================== -->
+  <div id="result-overlay" class="result-overlay" role="alert" aria-live="assertive">
+    <div id="result-icon" class="result-icon" aria-hidden="true">✅</div>
+    <div id="result-title" class="result-title">Safe</div>
+    <div id="result-url" class="result-url"></div>
+    <div id="result-details" class="result-details"></div>
+    <div id="result-dismiss-text" class="result-dismiss">Tap anywhere to dismiss</div>
+  </div>
+
+  <!-- Application Script -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
